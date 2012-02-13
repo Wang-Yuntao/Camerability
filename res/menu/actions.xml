@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/camera_id"
+        android:showAsAction="always|withText"
+        android:title="@string/camera_id_label">
+        <menu>
+            <item
+                android:id="@+id/front_camera_item"
+                android:title="@string/front_camera_label">
+            </item>
+            <item
+                android:id="@+id/back_camera_item"
+                android:title="@string/back_camera_label">
+            </item>
+        </menu>
+    </item>
+
+</menu>

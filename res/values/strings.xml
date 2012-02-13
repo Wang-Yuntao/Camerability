@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, CamerabilityActivity!</string>
+    <string name="app_name">Camerability</string>
+    <string name="preview_status">Preview fps=%d</string>
+    <string name="camera_id_label">Camera</string>
+    <string name="front_camera_label">Front Camera</string>
+    <string name="back_camera_label">Back Camera</string>
+
+</resources>
