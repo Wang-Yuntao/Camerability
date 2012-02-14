@@ -1,8 +1,6 @@
 package org.jt.android.camera;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import android.app.Activity;
 import android.hardware.Camera;
@@ -11,15 +9,14 @@ import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PreviewCallback;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.SurfaceHolder;
-import android.view.View;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
+import android.view.View;
+import android.view.Window;
 import android.widget.TextView;
 
 public class CamerabilityActivity extends Activity implements Callback,
@@ -31,13 +28,15 @@ public class CamerabilityActivity extends Activity implements Callback,
 	private static final byte[] BUFFER = new byte[320 * 240 * 3 / 2];
 	private TextView statusView;
 
-	private int currentCameraId = CameraInfo.CAMERA_FACING_FRONT;
+	private int currentCameraId;
 	private SurfaceView preview;
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		
 		setContentView(R.layout.main);
 
 		preview = (SurfaceView) findViewById(R.id.preview_surface);
@@ -45,11 +44,7 @@ public class CamerabilityActivity extends Activity implements Callback,
 
 		statusView = (TextView) findViewById(R.id.status);
 
-		camera = Camera.open(currentCameraId);
-		Parameters parameters = camera.getParameters();
-		parameters.setPreviewSize(320, 240);
-		Log.d("CamerabilityActivity", parameters.flatten());
-		camera.setParameters(parameters);
+		onCameraChanged(CameraInfo.CAMERA_FACING_FRONT);
 
 	}
 
@@ -111,16 +106,16 @@ public class CamerabilityActivity extends Activity implements Callback,
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int itemId = item.getItemId();
 		if (itemId == R.id.front_camera_item) {
-			
+			setCurrentCamera(CameraInfo.CAMERA_FACING_FRONT);
 		} else if (itemId == R.id.back_camera_item) {
-			
+			setCurrentCamera(CameraInfo.CAMERA_FACING_BACK);
 		}
 		return super.onOptionsItemSelected(item);
 	}
 	
 	private void setCurrentCamera(int id) {
 		if (currentCameraId != id) {
-			
+			onCameraChanged(id);
 		}
 	}
 	
@@ -128,8 +123,14 @@ public class CamerabilityActivity extends Activity implements Callback,
 		if (preview.getVisibility() == View.VISIBLE) {
 			preview.setVisibility(View.GONE);
 		}
-		camera.release();
+		if (camera != null) {
+			camera.release();
+		}
 		
+		currentCameraId = id;
+		
+		setProgressBarIndeterminateVisibility(true);
+		new OpenCameraTask().execute();
 	}
 	
 	class OpenCameraTask extends AsyncTask<Void, Void, Boolean> {
@@ -141,12 +142,16 @@ public class CamerabilityActivity extends Activity implements Callback,
 			} catch (RuntimeException e) {
 				return Boolean.FALSE;
 			}
+			Parameters parameters = camera.getParameters();
+			parameters.setPreviewSize(320, 240);
+			camera.setParameters(parameters);
 			return Boolean.TRUE;
 		}
 		
 		@Override
 		protected void onPostExecute(Boolean result) {
 			preview.setVisibility(View.VISIBLE);
+			setProgressBarIndeterminateVisibility(false);
 		}
 	}
 }
