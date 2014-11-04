@@ -3,6 +3,7 @@ package org.jt.android.camera;
 import java.io.IOException;
 
 import android.app.Activity;
+import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
@@ -24,8 +25,9 @@ public class CamerabilityActivity extends Activity implements Callback,
 	// private SurfaceView preview;
 	private Camera camera;
 	private long lastFrameTime;
-
-	private static final byte[] BUFFER = new byte[320 * 240 * 3 / 2];
+	private int width;
+	private int height;
+	private byte[] buffer;
 	private TextView statusView;
 
 	private int currentCameraId;
@@ -46,6 +48,8 @@ public class CamerabilityActivity extends Activity implements Callback,
 
 		onCameraChanged(CameraInfo.CAMERA_FACING_FRONT);
 
+		width = 1280;
+		height = 720;
 	}
 
 	@Override
@@ -66,9 +70,15 @@ public class CamerabilityActivity extends Activity implements Callback,
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		camera.startPreview();
+		Parameters p = camera.getParameters();
+        p.setPreviewSize(width, height);
+        p.setPreviewFormat(ImageFormat.NV21);
+        camera.setParameters(p);
 		camera.setPreviewCallbackWithBuffer(this);
-		camera.addCallbackBuffer(BUFFER);
+		int size = ImageFormat.getBitsPerPixel(ImageFormat.NV21) * width * height / 8;
+        buffer = new byte[size];
+		camera.addCallbackBuffer(buffer);
+		camera.startPreview();
 	}
 
 	@Override
@@ -90,8 +100,14 @@ public class CamerabilityActivity extends Activity implements Callback,
 			delay = current - lastFrameTime;
 		}
 		lastFrameTime = current;
-		long fps = 1000 / delay;
-		statusView.setText(getString(R.string.preview_status, fps));
+		final long fps = 1000 / delay;
+		runOnUiThread(new Runnable() {
+            
+            @Override
+            public void run() {
+                statusView.setText(getString(R.string.preview_status, fps));
+            }
+        });
 		camera.addCallbackBuffer(data);
 	}
 
@@ -142,9 +158,6 @@ public class CamerabilityActivity extends Activity implements Callback,
 			} catch (RuntimeException e) {
 				return Boolean.FALSE;
 			}
-			Parameters parameters = camera.getParameters();
-			parameters.setPreviewSize(320, 240);
-			camera.setParameters(parameters);
 			return Boolean.TRUE;
 		}
 		
